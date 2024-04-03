@@ -38,10 +38,9 @@ impl Solution {
         [(-1, 0), (0, 1), (1, 0), (0, -1)]
             .map(|(delta_x, delta_y)| (from_x as i32 + delta_x, from_y as i32 + delta_y))
             .into_iter()
-            .filter(|(x, y)| {
-                0 <= *x && *x < board.len() as i32 && 0 < *y && *y < board[*x as usize].len() as i32
-            })
+            .filter(|(x, y)| 0 <= *x && 0 <= *y)
             .map(|(x, y)| (x as usize, y as usize))
+            .filter(|(x, y)| *x < board.len() && *y < board[*x].len())
             .filter(|new_from| !used.contains(&new_from.clone()))
             .any(|new_from| {
                 Solution::inner_exist(board, word.as_str(), new_from.clone(), &mut used.clone())
