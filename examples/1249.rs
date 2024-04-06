@@ -1,27 +1,21 @@
 impl Solution {
     pub fn min_remove_to_make_valid(s: String) -> String {
-        let mut closed_vs_open_counter = 0;
-        let mut reverse_result = String::new();
-        for character in s.chars().rev() {
-            if character == '(' {
-                closed_vs_open_counter -= 1;
-            } else if character == ')' {
-                closed_vs_open_counter += 1;
-            }
+        let open_removed = Self::remove_closing(s.chars().rev(), ')', '(');
 
-            if closed_vs_open_counter == -1 {
-                closed_vs_open_counter += 1
-            } else {
-                reverse_result.push(character);
-            }
-        }
+        Self::remove_closing(open_removed.chars().rev(), '(', ')')
+    }
 
+    fn remove_closing(
+        s: impl Iterator<Item = char>,
+        open_character: char,
+        closing_character: char,
+    ) -> String {
         let mut open_vs_closed_counter = 0;
         let mut result = String::new();
-        for character in reverse_result.chars().rev() {
-            if character == '(' {
+        for character in s {
+            if character == open_character {
                 open_vs_closed_counter += 1;
-            } else if character == ')' {
+            } else if character == closing_character {
                 open_vs_closed_counter -= 1;
             }
 
