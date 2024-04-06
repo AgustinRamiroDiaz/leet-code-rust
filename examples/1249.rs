@@ -11,22 +11,22 @@ impl Solution {
         closing_character: char,
     ) -> String {
         let mut open_vs_closed_counter = 0;
-        let mut result = String::new();
-        for character in s {
-            if character == open_character {
+
+        s.filter(|character| {
+            if character == &open_character {
                 open_vs_closed_counter += 1;
-            } else if character == closing_character {
+            } else if character == &closing_character {
                 open_vs_closed_counter -= 1;
             }
 
             if open_vs_closed_counter == -1 {
-                open_vs_closed_counter += 1
+                open_vs_closed_counter += 1;
+                false
             } else {
-                result.push(character);
+                true
             }
-        }
-
-        result
+        })
+        .collect()
     }
 }
 
