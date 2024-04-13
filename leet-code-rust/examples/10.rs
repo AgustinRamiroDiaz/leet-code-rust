@@ -60,8 +60,8 @@ impl Solution {
                         let s = s.as_str().to_string();
                         let mut pattern2 = pattern.clone();
                         pattern2.push_front(MetaToken::Klein(token));
-                        Self::is_match_inner(s.clone(), pattern)
-                            || Self::is_match_inner(s, pattern2)
+                        Self::is_match_inner(s.clone(), pattern2)
+                            || Self::is_match_inner(s, pattern)
                     }
                 }
                 MetaToken::Single(Token::Character(character)) => {
@@ -123,6 +123,26 @@ fn case4() {
     assert_eq!(
         false,
         Solution::is_match("mississippi".to_string(), "mis*is*p*.".to_string())
+    )
+}
+
+// TODO: this doesn't work due to algoritmic complexity
+// I think the solution would be to use state machines
+// The pseudocode could be:
+// - parse pattern and convert into non-deterministic state machine (with a DAG)
+// - create a set of pointers, initialized to [start node]
+// - on each iteration of the string input, step all node pointers to all their possible new states
+//   - if they can go to multiple places, get all of them
+//   - if they can't go anywhere, don't add nothing
+// - base case is when either the set is empty, which means that there's no solution, or the last node is present in the set, which means there's a solution
+#[test]
+fn case5() {
+    assert_eq!(
+        false,
+        Solution::is_match(
+            "aaaaaaaaaaaaab".to_string(),
+            "a*a*a*a*a*a*a*a*a*c".to_string()
+        )
     )
 }
 
