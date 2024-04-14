@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
 
 #[derive(Clone, Debug)]
 enum Token {
@@ -10,6 +10,68 @@ enum Token {
 enum MetaToken {
     Single(Token),
     Klein(Token),
+}
+
+enum Edge {
+    Token(Token),
+    Empty,
+}
+
+type NodeId = usize;
+
+struct NonDeterministicStateMachine {
+    start_node: NodeId,
+    end_node: NodeId,
+    edges: HashMap<NodeId, Vec<(Edge, NodeId)>>,
+}
+
+fn meta_tokens_to_ndstm(mut pattern: VecDeque<MetaToken>) -> NonDeterministicStateMachine {
+    let start_node = 0;
+
+    let mut node_id = start_node;
+
+    let mut edges = HashMap::new();
+    for token in pattern {
+        let new_node_id = node_id + 1;
+        let entry = edges.entry(node_id).or_insert(vec![]);
+        match token {
+            MetaToken::Klein(token) => {
+                entry.push((Edge::Empty, new_node_id));
+                entry.push((Edge::Token(token), new_node_id));
+            }
+            MetaToken::Single(token) => {
+                entry.push((Edge::Token(token), new_node_id));
+            }
+        }
+        node_id = new_node_id;
+    }
+
+    let end_node = node_id;
+
+    NonDeterministicStateMachine {
+        start_node,
+        end_node,
+        edges,
+    }
+}
+
+fn step(ndsm: &NonDeterministicStateMachine, from: NodeId, character: char) -> Vec<NodeId> {
+    let edges = ndsm.edges.get(&from).unwrap(); // we don't expect this to be called with wrong from
+
+    edges
+        .iter()
+        .flat_map(|(edge, to)| match edge {
+            Edge::Empty => step(ndsm, *to, character),
+            Edge::Token(Token::Dot) => vec![*to],
+            Edge::Token(Token::Character(edge_character)) => {
+                if character == *edge_character {
+                    vec![*to]
+                } else {
+                    vec![]
+                }
+            }
+        })
+        .collect()
 }
 
 impl Solution {
@@ -129,7 +191,8 @@ fn case4() {
 // TODO: this doesn't work due to algoritmic complexity
 // I think the solution would be to use state machines
 // The pseudocode could be:
-// - parse pattern and convert into non-deterministic state machine (with a DAG)
+// - parse pattern and convert into non-deterministic state machine
+//   - this can be modeled with a Directional Cyclic Graph. The graph could be a HashMap<NodeId, (Token Edge, NodeId)>
 // - create a set of pointers, initialized to [start node]
 // - on each iteration of the string input, step all node pointers to all their possible new states
 //   - if they can go to multiple places, get all of them
