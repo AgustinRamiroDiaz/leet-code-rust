@@ -103,6 +103,24 @@ fn step(ndsm: &NonDeterministicStateMachine, from: NodeId, character: char) -> V
         .collect()
 }
 
+fn traverse_empty(ndsm: &NonDeterministicStateMachine, from: NodeId) -> Vec<NodeId> {
+    let edges = ndsm.edges.get(&from).unwrap(); // we don't expect this to be called with wrong from
+
+    let mut out: Vec<_> = edges
+        .iter()
+        .flat_map(|(edge, to)| match edge {
+            Edge::Empty => traverse_empty(ndsm, *to),
+            Edge::Token(_) => {
+                vec![]
+            }
+        })
+        .collect();
+
+    out.push(from);
+
+    out
+}
+
 impl Solution {
     pub fn is_match(s: String, p: String) -> bool {
         let mut tokens = VecDeque::new();
@@ -137,6 +155,11 @@ impl Solution {
                 .flat_map(|node| step(&ndsm, *node, character))
                 .collect();
         }
+
+        node_pointers = node_pointers
+            .iter()
+            .flat_map(|&node| traverse_empty(&ndsm, node))
+            .collect();
 
         node_pointers.contains(&ndsm.end_node)
     }
@@ -179,16 +202,6 @@ fn case4() {
     )
 }
 
-// TODO: this doesn't work due to algoritmic complexity
-// I think the solution would be to use state machines
-// The pseudocode could be:
-// - parse pattern and convert into non-deterministic state machine
-//   - this can be modeled with a Directional Cyclic Graph. The graph could be a HashMap<NodeId, (Token Edge, NodeId)>
-// - create a set of pointers, initialized to [start node]
-// - on each iteration of the string input, step all node pointers to all their possible new states
-//   - if they can go to multiple places, get all of them
-//   - if they can't go anywhere, don't add nothing
-// - base case is when either the set is empty, which means that there's no solution, or the last node is present in the set, which means there's a solution
 #[test]
 fn case5() {
     assert_eq!(
@@ -198,6 +211,11 @@ fn case5() {
             "a*a*a*a*a*a*a*a*a*c".to_string()
         )
     )
+}
+
+#[test]
+fn case6() {
+    assert_eq!(true, Solution::is_match("a".to_string(), "ab*".to_string()))
 }
 
 struct Solution;
