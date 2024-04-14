@@ -12,6 +12,7 @@ enum MetaToken {
     Klein(Token),
 }
 
+#[derive(Debug)]
 enum Edge {
     Token(Token),
     Empty,
@@ -19,6 +20,7 @@ enum Edge {
 
 type NodeId = usize;
 
+#[derive(Debug)]
 struct NonDeterministicStateMachine {
     start_node: NodeId,
     end_node: NodeId,
@@ -95,7 +97,21 @@ impl Solution {
             tokens.push_back(meta_token);
         }
 
-        Self::is_match_inner(s, tokens)
+        let ndsm = meta_tokens_to_ndstm(tokens);
+        println!("{:?}", ndsm);
+        let mut node_pointers = vec![ndsm.start_node];
+
+        for character in s.chars() {
+            if node_pointers.is_empty() {
+                return false;
+            }
+            node_pointers = node_pointers
+                .iter()
+                .flat_map(|node| step(&ndsm, *node, character))
+                .collect();
+        }
+
+        node_pointers.contains(&ndsm.end_node)
     }
 
     fn is_match_inner(s: String, mut pattern: VecDeque<MetaToken>) -> bool {
