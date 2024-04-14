@@ -75,6 +75,8 @@ fn meta_tokens_to_ndstm(pattern: VecDeque<MetaToken>) -> NonDeterministicStateMa
 
     let end_node = node_id;
 
+    edges.entry(end_node).or_insert(vec![]);
+
     NonDeterministicStateMachine {
         start_node,
         end_node,
