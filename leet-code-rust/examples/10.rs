@@ -140,58 +140,6 @@ impl Solution {
 
         node_pointers.contains(&ndsm.end_node)
     }
-
-    fn is_match_inner(s: String, mut pattern: VecDeque<MetaToken>) -> bool {
-        println!("comparing {:?} and {:?}", s, pattern);
-        if let Some(meta_token) = pattern.pop_front() {
-            match meta_token {
-                MetaToken::Klein(token) => {
-                    Self::is_match_inner(s.clone(), pattern.clone()) || {
-                        if s.is_empty() {
-                            return false;
-                        }
-                        let mut s = s.chars();
-
-                        let next_s = s.next().unwrap();
-                        match token {
-                            Token::Character(character) => {
-                                if character != next_s {
-                                    return false;
-                                }
-                            }
-                            Token::Dot => {}
-                        };
-
-                        let s = s.as_str().to_string();
-                        let mut pattern2 = pattern.clone();
-                        pattern2.push_front(MetaToken::Klein(token));
-                        Self::is_match_inner(s.clone(), pattern2)
-                            || Self::is_match_inner(s, pattern)
-                    }
-                }
-                MetaToken::Single(Token::Character(character)) => {
-                    if s.is_empty() {
-                        return false;
-                    }
-                    let mut s = s.chars();
-                    if s.next().unwrap() != character {
-                        return false;
-                    }
-                    Self::is_match_inner(s.as_str().to_string(), pattern)
-                }
-                MetaToken::Single(Token::Dot) => {
-                    if s.is_empty() {
-                        return false;
-                    }
-                    let mut s = s.chars();
-                    s.next().unwrap();
-                    Self::is_match_inner(s.as_str().to_string(), pattern)
-                }
-            }
-        } else {
-            s.is_empty()
-        }
-    }
 }
 
 #[test]
