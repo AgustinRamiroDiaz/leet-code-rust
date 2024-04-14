@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, VecDeque},
+    collections::{HashMap, HashSet, VecDeque},
     fmt::Display,
 };
 
@@ -106,19 +106,24 @@ fn step(ndsm: &NonDeterministicStateMachine, from: NodeId, character: char) -> V
 fn traverse_empty(ndsm: &NonDeterministicStateMachine, from: NodeId) -> Vec<NodeId> {
     let edges = ndsm.edges.get(&from).unwrap(); // we don't expect this to be called with wrong from
 
-    let mut out: Vec<_> = edges
-        .iter()
-        .flat_map(|(edge, to)| match edge {
-            Edge::Empty => traverse_empty(ndsm, *to),
-            Edge::Token(_) => {
-                vec![]
-            }
-        })
-        .collect();
+    let mut current = HashSet::from([from]);
+    let mut new: HashSet<_> = HashSet::new();
 
-    out.push(from);
+    while new != current {
+        current = new;
 
-    out
+        new = edges
+            .iter()
+            .flat_map(|(edge, to)| match edge {
+                Edge::Empty => Some(*to),
+                Edge::Token(_) => None,
+            })
+            .collect();
+
+        new.insert(from);
+    }
+
+    Vec::from_iter(new.into_iter())
 }
 
 impl Solution {
@@ -216,6 +221,18 @@ fn case5() {
 #[test]
 fn case6() {
     assert_eq!(true, Solution::is_match("a".to_string(), "ab*".to_string()))
+}
+
+// TODO: improve performance: this test takes 10 seconds to run in my pc
+#[test]
+fn case7() {
+    assert_eq!(
+        false,
+        Solution::is_match(
+            "aaaaaaaaaaaaaaaaaaa".to_string(),
+            "a*a*a*a*a*a*a*a*a*b".to_string()
+        )
+    )
 }
 
 struct Solution;
