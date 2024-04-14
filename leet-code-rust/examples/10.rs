@@ -1,4 +1,7 @@
-use std::collections::{HashMap, VecDeque};
+use std::{
+    collections::{HashMap, VecDeque},
+    fmt::Display,
+};
 
 #[derive(Clone, Debug)]
 enum Token {
@@ -27,7 +30,26 @@ struct NonDeterministicStateMachine {
     edges: HashMap<NodeId, Vec<(Edge, NodeId)>>,
 }
 
-fn meta_tokens_to_ndstm(mut pattern: VecDeque<MetaToken>) -> NonDeterministicStateMachine {
+impl Display for NonDeterministicStateMachine {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}\n", self.start_node)?;
+
+        let mut edges: Vec<_> = self.edges.iter().collect();
+
+        edges.sort_by(|&a, &b| a.0.cmp(b.0));
+
+        for (from, edges) in edges {
+            for (edge, to) in edges {
+                write!(f, "{from}-{edge:?}->{to}\n")?;
+            }
+        }
+
+        write!(f, "{}", self.end_node)?;
+        Ok(())
+    }
+}
+
+fn meta_tokens_to_ndstm(pattern: VecDeque<MetaToken>) -> NonDeterministicStateMachine {
     let start_node = 0;
 
     let mut node_id = start_node;
@@ -39,7 +61,10 @@ fn meta_tokens_to_ndstm(mut pattern: VecDeque<MetaToken>) -> NonDeterministicSta
         match token {
             MetaToken::Klein(token) => {
                 entry.push((Edge::Empty, new_node_id));
-                entry.push((Edge::Token(token), new_node_id));
+                edges
+                    .entry(new_node_id)
+                    .or_insert(vec![])
+                    .push((Edge::Token(token), new_node_id));
             }
             MetaToken::Single(token) => {
                 entry.push((Edge::Token(token), new_node_id));
@@ -98,7 +123,7 @@ impl Solution {
         }
 
         let ndsm = meta_tokens_to_ndstm(tokens);
-        println!("{:?}", ndsm);
+        println!("{}", ndsm);
         let mut node_pointers = vec![ndsm.start_node];
 
         for character in s.chars() {
